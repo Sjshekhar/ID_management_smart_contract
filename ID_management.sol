@@ -2,35 +2,49 @@ pragma solidity >=0.4.22 <0.6.0;
 
 contract Access {
 
-    struct Did {
+    struct DID {
         uint8 id;
+        bool whitelist;
+        bool blacklist;
     }
 
-    address iotDevice;
-    mapping(address => Did) devices;
+    mapping(address => mapping(address => DID)) devices;
 
-    function registerDevice(address device, uint8 id) public {
+    function createID(address owner, address device, uint8 id) public {
         if (id == 0) {
-            devices[device].id = id;
+            devices[owner][device].id = id;
+             devices[owner][device].whitelist = true;
         }
     }
 
-    function getID(address device) public view returns (uint8){
-            return devices[device].id;
+    function getID(address owner, address device) public view returns (uint8) {
+            return devices[owner][device].id;
         }
 
-    function checkID(address device, int id) public view returns (bool){
-         if(devices[device].id == id) {
-            return true;
+    function isDeviceWhitelisted(address owner, address device) public view returns (bool) {
+            return devices[owner][device].whitelist;
         }
-         else {
-             return false;
-         }
+
+     function isDeviceBlacklisted(address owner, address device) public view returns (bool) {
+            return devices[owner][device].blacklist;
+        }
+
+    function checkID(address owner, address device, int id) public view returns (bool) {
+            return devices[owner][device].id == id;
     }
 
-    function changeID(address device, uint8 newID) public {
+    function updateID(address owner, address device, uint8 newID) public {
         if (newID == 0) {
-            devices[device].id = newID;
+            devices[owner][device].id = newID;
         }
     }
+
+    function deleteDevice(address owner, address device) public {
+            delete devices[owner][device];
+        }
+
+    function transferOwnership(address oldOwner, address newOwner, address device, uint8 id) public {
+            delete devices[oldOwner][device];
+            createID(newOwner, device, id);
+        }
 }
